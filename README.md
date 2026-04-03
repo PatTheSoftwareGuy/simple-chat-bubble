@@ -44,7 +44,7 @@ export AIHORDE_MODEL="openai/gpt-oss-20b"
 
 ```bash
 cd backend
-python -m pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -96,6 +96,12 @@ Preview and deploy:
 azd provision --preview
 azd provision
 azd deploy
+```
+
+The App Service startup command is configured for ASGI/FastAPI:
+
+```text
+gunicorn --worker-class uvicorn.workers.UvicornWorker --bind=0.0.0.0:8000 app.main:app
 ```
 
 ## CI/CD

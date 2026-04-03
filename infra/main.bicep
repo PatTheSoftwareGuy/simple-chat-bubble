@@ -37,7 +37,7 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
     siteConfig: {
       linuxFxVersion: 'PYTHON|3.13'
       alwaysOn: false
-      appCommandLine: 'gunicorn --bind=0.0.0.0:8000 app.main:app'
+      appCommandLine: 'gunicorn --worker-class uvicorn.workers.UvicornWorker --bind=0.0.0.0:8000 app.main:app'
       appSettings: [
         {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
