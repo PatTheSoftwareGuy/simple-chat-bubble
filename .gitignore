@@ -146,7 +146,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-/backend/tests/__pycache__
-/backend/tests/__pycache__
-/backend/tests/__pycache__
+__pycache__/
 *.pyc

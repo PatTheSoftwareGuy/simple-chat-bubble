@@ -59,6 +59,19 @@ tools:
           kind: string
           description: Aviation term to define, for example runway, crosswind, taxi.
           required: true
+  - name: weather_mcp
+    kind: mcp
+    serverName: weather-mcp-function
+    serverDescription: Weather forecast lookups via deployed Azure Function MCP server.
+    connection:
+      kind: remote
+      name: weather-mcp-endpoint
+      endpoint: ${env:AZURE_FUNCTIONAPP_URL}/api/mcp
+    approvalMode:
+      kind: never
+    allowedTools:
+      - get_heartbeat
+      - get_weather_forecast
 input:
   type: chat
 output:

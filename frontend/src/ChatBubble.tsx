@@ -168,7 +168,7 @@ export function ChatBubble({ apiBaseUrl, title = "Agent Plane Talk", description
                   {item.content}
                 </article>
               ))}
-              {isBusy && messages[messages.length - 1]?.role !== "assistant" && (
+              {isBusy && (
                 <div className="chatbubble-message assistant">
                   <Spinner size="tiny" labelPosition="after">
                     <Text>Agent Plane Talk is taxiing for a response...</Text>
