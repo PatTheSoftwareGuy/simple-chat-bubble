@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "3915741344760424164"
+      "templateHash": "15425399260464657372"
     }
   },
   "parameters": {
@@ -121,7 +121,11 @@
     "enableGithubFederation": "[and(not(empty(parameters('githubOrg'))), not(empty(parameters('githubRepo'))))]",
     "isFreeSku": "[equals(parameters('appServiceSkuName'), 'F1')]",
     "appServiceSkuTier": "[if(equals(parameters('appServiceSkuName'), 'F1'), 'Free', 'Basic')]",
-    "functionStorageName": "[format('st{0}', uniqueString(resourceGroup().id, parameters('functionAppName')))]"
+    "functionStorageName": "[format('st{0}', uniqueString(resourceGroup().id, parameters('functionAppName')))]",
+    "storageBlobDataContributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+    "storageQueueDataContributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')]",
+    "storageTableDataContributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')]",
+    "storageFileDataPrivilegedContributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '69566ab7-960f-475b-8e7c-b3118f30c6bd')]"
   },
   "resources": [
     {
@@ -231,6 +235,7 @@
       "kind": "StorageV2",
       "properties": {
         "allowBlobPublicAccess": false,
+        "allowSharedKeyAccess": false,
         "minimumTlsVersion": "TLS1_2",
         "supportsHttpsTrafficOnly": true
       }
@@ -241,10 +246,19 @@
       "name": "[parameters('functionAppName')]",
       "location": "[parameters('location')]",
       "kind": "functionapp,linux",
+      "identity": {
+        "type": "SystemAssigned"
+      },
       "properties": {
         "serverFarmId": "[if(variables('isFreeSku'), resourceId('Microsoft.Web/serverfarms', parameters('functionAppServicePlanName')), resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName')))]",
         "siteConfig": {
           "linuxFxVersion": "PYTHON|3.13",
+          "cors": {
+            "allowedOrigins": [
+              "[format('https://{0}', reference(resourceId('Microsoft.Web/sites', parameters('appName')), '2024-04-01').defaultHostName)]",
+              "https://portal.azure.com"
+            ]
+          },
           "appSettings": [
             {
               "name": "FUNCTIONS_WORKER_RUNTIME",
@@ -259,8 +273,12 @@
               "value": "true"
             },
             {
-              "name": "AzureWebJobsStorage",
-              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('functionStorageName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName')), '2023-05-01').keys[0].value, environment().suffixes.storage)]"
+              "name": "AzureWebJobsStorage__accountName",
+              "value": "[variables('functionStorageName')]"
+            },
+            {
+              "name": "AzureWebJobsStorage__credential",
+              "value": "managedidentity"
             },
             {
               "name": "LATLNG_API_KEY",
@@ -281,6 +299,67 @@
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
         "[resourceId('Microsoft.Web/serverfarms', parameters('functionAppServicePlanName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName'))]",
+        "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName')), resourceId('Microsoft.Web/sites', parameters('functionAppName')), variables('storageBlobDataContributorRoleId'))]",
+      "properties": {
+        "roleDefinitionId": "[variables('storageBlobDataContributorRoleId')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2024-04-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName')), resourceId('Microsoft.Web/sites', parameters('functionAppName')), variables('storageQueueDataContributorRoleId'))]",
+      "properties": {
+        "roleDefinitionId": "[variables('storageQueueDataContributorRoleId')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2024-04-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName')), resourceId('Microsoft.Web/sites', parameters('functionAppName')), variables('storageTableDataContributorRoleId'))]",
+      "properties": {
+        "roleDefinitionId": "[variables('storageTableDataContributorRoleId')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2024-04-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName')), resourceId('Microsoft.Web/sites', parameters('functionAppName')), variables('storageFileDataPrivilegedContributorRoleId'))]",
+      "properties": {
+        "roleDefinitionId": "[variables('storageFileDataPrivilegedContributorRoleId')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2024-04-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('functionStorageName'))]"
       ]
     }
@@ -305,10 +384,6 @@
     "AIHORDE_MODEL": {
       "type": "string",
       "value": "[parameters('aiHordeModel')]"
-    },
-    "latLngApiKey": {
-      "type": "string",
-      "value": "[parameters('latLngApiKey')]"
     },
     "GITHUB_DEPLOY_MANAGED_IDENTITY_CLIENT_ID": {
       "type": "string",

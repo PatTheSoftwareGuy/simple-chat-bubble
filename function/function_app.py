@@ -243,6 +243,50 @@ def _run_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     raise ValueError(f"Unknown tool: {name}")
 
 
+def _http_success(payload: dict[str, Any], status_code: int = 200) -> func.HttpResponse:
+    return func.HttpResponse(
+        json.dumps(payload),
+        status_code=status_code,
+        mimetype="application/json",
+    )
+
+
+def _http_error(message: str, status_code: int = 400) -> func.HttpResponse:
+    return _http_success({"error": message}, status_code=status_code)
+
+
+@app.route(route="heartbeat", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+def heartbeat_http(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        result = _run_tool(HEARTBEAT_TOOL_NAME, {})
+        return _http_success(result)
+    except ValueError as exc:
+        return _http_error(str(exc), status_code=400)
+    except requests.RequestException as exc:
+        return _http_error(f"Upstream request failed: {exc}", status_code=502)
+    except Exception as exc:  # noqa: BLE001
+        return _http_error(f"Internal error: {exc}", status_code=500)
+
+
+@app.route(route="weather", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+def weather_http(req: func.HttpRequest) -> func.HttpResponse:
+    arguments = {
+        "city": req.params.get("city", ""),
+        "state": req.params.get("state", ""),
+        "days": req.params.get("days", "3"),
+    }
+
+    try:
+        result = _run_tool(WEATHER_TOOL_NAME, arguments)
+        return _http_success(result)
+    except ValueError as exc:
+        return _http_error(str(exc), status_code=400)
+    except requests.RequestException as exc:
+        return _http_error(f"Upstream request failed: {exc}", status_code=502)
+    except Exception as exc:  # noqa: BLE001
+        return _http_error(f"Internal error: {exc}", status_code=500)
+
+
 @app.route(route="mcp", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
 def mcp(req: func.HttpRequest) -> func.HttpResponse:
     request_id: Any = None

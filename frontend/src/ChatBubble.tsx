@@ -163,11 +163,19 @@ export function ChatBubble({ apiBaseUrl, title = "Agent Plane Talk", description
             </header>
 
             <div className="chatbubble-log">
-              {messages.map((item, index) => (
-                <article key={`${item.role}-${index}`} className={`chatbubble-message ${item.role}`}>
-                  {item.content}
-                </article>
-              ))}
+              {messages.map((item, index) => {
+                const isEmptyAssistantPlaceholder =
+                  item.role === "assistant" && item.content.trim().length === 0;
+                if (isEmptyAssistantPlaceholder) {
+                  return null;
+                }
+
+                return (
+                  <article key={`${item.role}-${index}`} className={`chatbubble-message ${item.role}`}>
+                    {item.content}
+                  </article>
+                );
+              })}
               {isBusy && (
                 <div className="chatbubble-message assistant">
                   <Spinner size="tiny" labelPosition="after">
