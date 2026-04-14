@@ -34,6 +34,14 @@ export AIHORDE_BASE_URL="https://oai.aihorde.net/v1"
 export AIHORDE_MODEL="openai/gpt-oss-20b"
 ```
 
+To control client-side history window (how many most recent bubble messages are sent on each request), set:
+
+```bash
+export VITE_CHAT_HISTORY_LIMIT="10"
+```
+
+If omitted or invalid, the widget defaults to `10`.
+
 ### 2. Build widget assets
 
 ```bash
