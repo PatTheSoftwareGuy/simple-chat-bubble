@@ -55,7 +55,7 @@ var enableGithubFederation = !empty(githubOrg) && !empty(githubRepo)
 var isFreeSku = appServiceSkuName == 'F1'
 var appServiceSkuTier = appServiceSkuName == 'F1' ? 'Free' : 'Basic'
 var webAppUrl = 'https://${appName}.azurewebsites.net'
-var weatherWebAppUrl = 'https://${weatherWebAppName}.azurewebsites.net'
+var weatherWebAppUrl = 'https://${weatherWebAppName}.azurewebsites.net/'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: appServicePlanName
