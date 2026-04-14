@@ -17,7 +17,7 @@ system: |
   - For harmful requests, refuse briefly and offer a safe alternative.
 
 model:
-  id: ${env:AIHORDE_MODEL:koboldcpp/gemma-4-26B-A4B-it-heretic.IQ4_XS}
+  id: ${env:AIHORDE_MODEL:koboldcpp/Ministral-3-8B-Instruct-2512}
   provider: openai
   apiType: chat
   connection:

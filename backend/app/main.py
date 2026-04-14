@@ -490,7 +490,7 @@ def _build_aihorde_headers(api_key: str | None) -> dict[str, str]:
 
 
 def _list_aihorde_models(base_url: str, api_key: str | None) -> list[str]:
-    timeout_seconds = int(os.getenv("AIHORDE_HTTP_TIMEOUT_SECONDS", "25"))
+    timeout_seconds = int(os.getenv("AIHORDE_HTTP_TIMEOUT_SECONDS", "60"))
     models_url = f"{base_url.rstrip('/')}/models"
     status_code, body_text = _get_json(models_url, _build_aihorde_headers(api_key), timeout_seconds)
     if status_code != 200:
@@ -544,7 +544,7 @@ def _aihorde_chat_completion(
     temperature: float | None,
     max_tokens: int | None,
 ) -> dict[str, object]:
-    timeout_seconds = int(os.getenv("AIHORDE_HTTP_TIMEOUT_SECONDS", "25"))
+    timeout_seconds = int(os.getenv("AIHORDE_HTTP_TIMEOUT_SECONDS", "60"))
     url = f"{base_url.rstrip('/')}/chat/completions"
 
     request_payload: dict[str, object] = {
